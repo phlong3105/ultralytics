@@ -79,7 +79,7 @@ def main(
     verbose  = verbose  or args["verbose"]
     
     # Update arguments
-    args["root"]     = root
+    # args["root"]     = root
     args["mode"]     = "train"
     args["model"]    = weights
     args["data"]     = str(data)

@@ -91,7 +91,7 @@ def main(
     verbose    = verbose
     
     # Update arguments
-    args["root"]     = root
+    # args["root"]     = root
     args["mode"]    = "predict"
     args["model"]   = weights
     args["project"] = str(save_dir.parent)
