@@ -68,11 +68,11 @@ def main(
     save_image: bool,
     verbose   : bool,
 ) -> str:
-    hostname = socket.gethostname().lower()
+    hostname   = socket.gethostname().lower()
     
     # Get config args
-    config   = core.parse_config_file(project_root=_current_dir.parent / "config", config=config)
-    args     = core.load_config(config)
+    config     = core.parse_config_file(project_root=_current_dir.parent / "config", config=config)
+    args       = core.load_config(config)
     
     # Parse arguments
     root       = root     or args["root"]
@@ -85,7 +85,7 @@ def main(
     # Prioritize input args --> config file args
     root       = core.Path(root)
     weights    = core.to_list(weights)
-    # weights    = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
+    weights    = weights[0]
     save_dir   = save_dir or root / "run" / "train" / model
     save_dir   = core.Path(save_dir)
     
@@ -95,6 +95,7 @@ def main(
     args["project"] = str(save_dir.parent)
     args["name"]    = str(save_dir.name)
     args["imgsz"]   = imgsz
+    args["batch"]   = 1
     args["device"]  = device
     args["verbose"] = verbose
     args["source"]  = data
