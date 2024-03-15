@@ -59,30 +59,33 @@ def main(
     hostname = socket.gethostname().lower()
     
     # Get config args
-    config = core.parse_config_file(project_root=_current_dir / "config", config=config)
-    args   = core.load_config(config)
+    config   = core.parse_config_file(project_root=_current_dir / "config", config=config)
+    args     = core.load_config(config)
     
     # Prioritize input args --> config file args
     root     = root     or args["root"]
-    root     = core.Path(root)
     weights  = weights  or args["model"]
-    weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
-    data     = core.Path(args["data"])
-    data     = data  if data.exists() else _current_dir / "data" / data.name
-    data     = data.config_file()
+    data     = args["data"]
     fullname = fullname or args["name"]
-    save_dir = save_dir or root / "run" / "train" / fullname
-    save_dir = core.Path(save_dir)
     device   = device   or args["device"]
     epochs   = epochs   or args["epochs"]
     exist_ok = exist_ok or args["exist_ok"]
     verbose  = verbose  or args["verbose"]
     
+    # Parse arguments
+    root     = core.Path(root)
+    weights  = core.to_list(weights)
+    weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
+    data     = core.Path(data)
+    data     = data  if data.exists() else _current_dir / "data" / data.name
+    data     = str(data.config_file())
+    save_dir = save_dir or root / "run" / "train" / fullname
+    save_dir = core.Path(save_dir)
+    
     # Update arguments
-    # args["root"]     = root
     args["mode"]     = "train"
     args["model"]    = weights
-    args["data"]     = str(data)
+    args["data"]     = data
     args["project"]  = str(save_dir.parent)
     args["name"]     = str(save_dir.name)
     args["epochs"]   = epochs

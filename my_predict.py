@@ -71,27 +71,25 @@ def main(
     hostname = socket.gethostname().lower()
     
     # Get config args
-    config = core.parse_config_file(project_root=_current_dir.parent / "config", config=config)
-    args   = core.load_config(config)
+    config   = core.parse_config_file(project_root=_current_dir.parent / "config", config=config)
+    args     = core.load_config(config)
     
-    # Prioritize input args --> config file args
+    # Parse arguments
     root       = root     or args["root"]
-    root       = core.Path(root)
     weights    = weights  or args["model"]
-    # weights    = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     data       = data     or args["source"]
     fullname   = fullname or args["name"]
-    save_dir   = save_dir or root / "run" / "train" / model
-    save_dir   = core.Path(save_dir)
     device     = device   or args["device"]
     imgsz      = imgsz    or args["imgsz"]
-    resize     = resize
-    benchmark  = benchmark
-    save_image = save_image
-    verbose    = verbose
+    
+    # Prioritize input args --> config file args
+    root       = core.Path(root)
+    weights    = core.to_list(weights)
+    # weights    = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
+    save_dir   = save_dir or root / "run" / "train" / model
+    save_dir   = core.Path(save_dir)
     
     # Update arguments
-    # args["root"]     = root
     args["mode"]    = "predict"
     args["model"]   = weights
     args["project"] = str(save_dir.parent)
