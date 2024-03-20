@@ -40,33 +40,43 @@ def predict(args: dict):
 # region Main
 
 @click.command(name="predict", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-@click.option("--root",       type=str, default=None, help="Project root.")
-@click.option("--config",     type=str, default=None, help="Model config.")
-@click.option("--weights",    type=str, default=None, help="Weights paths.")
-@click.option("--model",      type=str, default=None, help="Model name.")
-@click.option("--data",       type=str, default=None, help="Source data directory.")
-@click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/fullname.")
-@click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--device",     type=str, default=None, help="Running devices.")
-@click.option("--imgsz",      type=int, default=None, help="Image sizes.")
-@click.option("--resize",     is_flag=True)
-@click.option("--benchmark",  is_flag=True)
-@click.option("--save-image", is_flag=True)
-@click.option("--verbose",    is_flag=True)
+@click.option("--root",         type=str,   default=None, help="Project root.")
+@click.option("--config",       type=str,   default=None, help="Model config.")
+@click.option("--weights",      type=str,   default=None, help="Weights paths.")
+@click.option("--model",        type=str,   default=None, help="Model name.")
+@click.option("--data",         type=str,   default=None, help="Source data directory.")
+@click.option("--fullname",     type=str,   default=None, help="Save results to root/run/predict/fullname.")
+@click.option("--save-dir",     type=str,   default=None, help="Optional saving directory.")
+@click.option("--device",       type=str,   default=None, help="Running devices.")
+@click.option("--imgsz",        type=int,   default=None, help="Image sizes.")
+@click.option("--conf",         type=float, default=None, help="Confidence threshold.")
+@click.option("--iou",          type=float, default=None, help="IoU threshold.")
+@click.option("--max-det",      type=int,   default=None, help="Max detections per image.")
+@click.option("--resize",       is_flag=True)
+@click.option("--augment",      is_flag=True)
+@click.option("--agnostic-nms", is_flag=True)
+@click.option("--benchmark",    is_flag=True)
+@click.option("--save-image",   is_flag=True)
+@click.option("--verbose",      is_flag=True)
 def main(
-    root      : str,
-    config    : str,
-    weights   : str,
-    model     : str,
-    data      : str,
-    fullname  : str,
-    save_dir  : str,
-    device    : str,
-    imgsz     : int,
-    resize    : bool,
-    benchmark : bool,
-    save_image: bool,
-    verbose   : bool,
+    root        : str,
+    config      : str,
+    weights     : str,
+    model       : str,
+    data        : str,
+    fullname    : str,
+    save_dir    : str,
+    device      : str,
+    imgsz       : int,
+    conf        : float,
+    iou         : float,
+    max_det     : int,
+    resize      : bool,
+    augment     : bool,
+    agnostic_nms: bool,
+    benchmark   : bool,
+    save_image  : bool,
+    verbose     : bool,
 ) -> str:
     hostname   = socket.gethostname().lower()
     
@@ -75,12 +85,18 @@ def main(
     args       = core.load_config(config)
     
     # Parse arguments
-    root       = root     or args["root"]
-    weights    = weights  or args["model"]
-    data       = data     or args["source"]
-    fullname   = fullname or args["name"]
-    device     = device   or args["device"]
-    imgsz      = imgsz    or args["imgsz"]
+    root         = root         or args["root"]
+    weights      = weights      or args["model"]
+    data         = data         or args["source"]
+    fullname     = fullname     or args["name"]
+    device       = device       or args["device"]
+    imgsz        = imgsz        or args["imgsz"]
+    conf         = conf         or args["conf"]
+    iou          = iou          or args["iou"]
+    max_det      = max_det      or args["max_det"]
+    augment      = augment      or args["augment"]
+    agnostic_nms = agnostic_nms or args["agnostic_nms"]
+    verbose      = verbose      or args["verbose"]
     
     # Prioritize input args --> config file args
     root       = core.Path(root)
@@ -90,15 +106,20 @@ def main(
     save_dir   = core.Path(save_dir)
     
     # Update arguments
-    args["mode"]    = "predict"
-    args["model"]   = weights
-    args["project"] = str(save_dir.parent)
-    args["name"]    = str(save_dir.name)
-    args["imgsz"]   = imgsz
-    args["batch"]   = 1
-    args["device"]  = device
-    args["verbose"] = verbose
-    args["source"]  = data
+    args["mode"]         = "predict"
+    args["model"]        = weights
+    args["project"]      = str(save_dir.parent)
+    args["name"]         = str(save_dir.name)
+    args["imgsz"]        = imgsz
+    args["conf"]         = conf
+    args["iou"]          = iou
+    args["max_det"]      = max_det
+    args["augment"]      = augment
+    args["agnostic_nms"] = agnostic_nms
+    args["batch"]        = 1
+    args["device"]       = device
+    args["verbose"]      = verbose
+    args["source"]       = data
     
     predict(args=args)
     return str(save_dir)
