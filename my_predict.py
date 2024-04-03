@@ -85,18 +85,18 @@ def main(
     args       = core.load_config(config)
     
     # Parse arguments
-    root         = root         or args["root"]
-    weights      = weights      or args["model"]
-    data         = data         or args["source"]
-    fullname     = fullname     or args["name"]
-    device       = device       or args["device"]
-    imgsz        = imgsz        or args["imgsz"]
-    conf         = conf         or args["conf"]
-    iou          = iou          or args["iou"]
-    max_det      = max_det      or args["max_det"]
-    augment      = augment      or args["augment"]
-    agnostic_nms = agnostic_nms or args["agnostic_nms"]
-    verbose      = verbose      or args["verbose"]
+    root         = root         or args.get("root")
+    weights      = weights      or args.get("weights")
+    data         = data         or args.get("data")
+    fullname     = fullname     or args.get("name")
+    device       = device       or args.get("device")
+    imgsz        = imgsz        or args.get("imgsz")
+    conf         = conf         or args.get("conf")
+    iou          = iou          or args.get("iou")
+    max_det      = max_det      or args.get("max_det")
+    augment      = augment      or args.get("augment")
+    agnostic_nms = agnostic_nms or args.get("agnostic_nms")
+    verbose      = verbose      or args.get("verbose")
     
     # Prioritize input args --> config file args
     root       = core.Path(root)
