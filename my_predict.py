@@ -10,14 +10,14 @@ import socket
 import click
 
 import ultralytics.utils
-from mon import core, DATA_DIR
+import mon 
 from ultralytics import YOLO
 
-console       = core.console
-_current_file = core.Path(__file__).absolute()
+console       = mon.console
+_current_file = mon.Path(__file__).absolute()
 _current_dir  = _current_file.parents[0]
 
-ultralytics.utils.DATASETS_DIR = DATA_DIR
+ultralytics.utils.DATASETS_DIR = mon.DATA_DIR
 
 
 # region Predict
@@ -30,7 +30,7 @@ def predict(args: dict):
     sources  = args.pop("source")
     sources  = [sources] if not isinstance(sources, list) else sources
     for source in sources:
-        path = core.Path(source)
+        path = mon.Path(source)
         name = path.parent.name if path.name == "images" else path.name
         _    = model(source=source, project=f"{project}", name=name, **args)
 
@@ -81,8 +81,8 @@ def main(
     hostname   = socket.gethostname().lower()
     
     # Get config args
-    config     = core.parse_config_file(project_root=_current_dir.parent / "config", config=config)
-    args       = core.load_config(config)
+    config     = mon.parse_config_file(project_root=_current_dir.parent / "config", config=config)
+    args       = mon.load_config(config)
     
     # Parse arguments
     root         = root         or args.get("root")
@@ -99,11 +99,11 @@ def main(
     verbose      = verbose      or args.get("verbose")
     
     # Prioritize input args --> config file args
-    root       = core.Path(root)
-    weights    = core.to_list(weights)
+    root       = mon.Path(root)
+    weights    = mon.to_list(weights)
     weights    = weights[0]
     save_dir   = save_dir or root / "run" / "train" / model
-    save_dir   = core.Path(save_dir)
+    save_dir   = mon.Path(save_dir)
     
     # Update arguments
     args["mode"]         = "predict"
