@@ -391,7 +391,7 @@ nav:
           - Model: hub/sdk/model.md
           - Dataset: hub/sdk/dataset.md
           - Project: hub/sdk/project.md
-          - Reference:
+          - References:
               - base:
                   - api_client: hub/sdk/reference/base/api_client.md
                   - auth: hub/sdk/reference/base/auth.md
@@ -413,7 +413,7 @@ nav:
       - REST API:
           - hub/api/index.md
 
-  - Reference:
+  - References:
       - cfg:
           - __init__: reference/cfg/__init__.md
       - data:
