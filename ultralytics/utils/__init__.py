@@ -22,9 +22,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import yaml
+from mon import DATA_DIR
 from tqdm import tqdm as tqdm_original
 
-from mon import DATA_DIR
 from ultralytics import __version__
 
 # PyTorch Multi-GPU DDP Constants
@@ -1068,11 +1068,11 @@ def url2file(url):
 # Run below code on utils init ------------------------------------------------------------------------------------
 
 # Check first-install steps
-PREFIX       = colorstr("Ultralytics: ")
-SETTINGS     = SettingsManager()  # initialize settings
+PREFIX = colorstr("Ultralytics: ")
+SETTINGS = SettingsManager()  # initialize settings
 DATASETS_DIR = DATA_DIR  # Path(SETTINGS["datasets_dir"])  # global datasets directory
-WEIGHTS_DIR  = Path(SETTINGS["weights_dir"])  # global weights directory
-RUNS_DIR     = Path(SETTINGS["runs_dir"])  # global runs directory
+WEIGHTS_DIR = Path(SETTINGS["weights_dir"])  # global weights directory
+RUNS_DIR = Path(SETTINGS["runs_dir"])  # global runs directory
 ENVIRONMENT = (
     "Colab"
     if IS_COLAB
