@@ -1071,7 +1071,7 @@ TESTS_RUNNING = is_pytest_running() or is_github_action_running()
 set_sentry()
 
 # Apply monkey patches
-from .patches import imread, imshow, imwrite, torch_save
+from ultralytics.utils.patches import imread, imshow, imwrite, torch_save
 
 torch.save = torch_save
 if WINDOWS:
