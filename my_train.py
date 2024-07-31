@@ -4,11 +4,7 @@
 
 from __future__ import annotations
 
-import socket
-
-import click
 import mon
-
 import ultralytics.utils
 from ultralytics import YOLO
 
