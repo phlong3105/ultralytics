@@ -256,7 +256,7 @@ class BasePredictor:
                         yield from [preds] if isinstance(preds, torch.Tensor) else preds  # yield embedding tensors
                         continue
 
-                # Postprocess
+                # Post-process
                 with profilers[2]:
                     self.results = self.postprocess(preds, im, im0s)
                 self.run_callbacks("on_predict_postprocess_end")
