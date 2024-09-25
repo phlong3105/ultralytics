@@ -64,7 +64,7 @@ class YOLOv8Seg:
         # Ort inference
         preds = self.session.run(None, {self.session.get_inputs()[0].name: im})
 
-        # Post-process
+        # Post-processing
         boxes, segments, masks = self.postprocess(
             preds,
             im0=im0,
