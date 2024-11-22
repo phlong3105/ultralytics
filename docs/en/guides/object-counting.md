@@ -19,7 +19,7 @@ Object counting with [Ultralytics YOLO11](https://github.com/ultralytics/ultraly
         allowfullscreen>
       </iframe>
       <br>
-      <strong>Watch:</strong> Object Counting using Ultralytics YOLO11
+      <strong>Watch:</strong> Object Counting using Ultralytics YOLOv8
     </td>
     <td align="center">
       <iframe loading="lazy" width="720" height="405" src="https://www.youtube.com/embed/Fj9TStNBVoY"
@@ -48,228 +48,75 @@ Object counting with [Ultralytics YOLO11](https://github.com/ultralytics/ultraly
 
 !!! example "Object Counting using YOLO11 Example"
 
-    === "Count in Region"
+    === "CLI"
+
+        ```bash
+        # Run a counting example
+        yolo solutions count show=True
+
+        # Pass a source video
+        yolo solutions count source="path/to/video/file.mp4"
+
+        # Pass region coordinates
+        yolo solutions count region=[(20, 400), (1080, 404), (1080, 360), (20, 360)]
+        ```
+
+    === "Python"
 
         ```python
         import cv2
 
-        from ultralytics import YOLO, solutions
+        from ultralytics import solutions
 
-        model = YOLO("yolo11n.pt")
         cap = cv2.VideoCapture("path/to/video/file.mp4")
         assert cap.isOpened(), "Error reading video file"
         w, h, fps = (int(cap.get(x)) for x in (cv2.CAP_PROP_FRAME_WIDTH, cv2.CAP_PROP_FRAME_HEIGHT, cv2.CAP_PROP_FPS))
 
         # Define region points
-        region_points = [(20, 400), (1080, 404), (1080, 360), (20, 360)]
+        # region_points = [(20, 400), (1080, 400)]  # For line counting
+        region_points = [(20, 400), (1080, 404), (1080, 360), (20, 360)]  # For rectangle region counting
+        # region_points = [(20, 400), (1080, 404), (1080, 360), (20, 360), (20, 400)]  # For polygon region counting
 
         # Video writer
         video_writer = cv2.VideoWriter("object_counting_output.avi", cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
 
         # Init Object Counter
         counter = solutions.ObjectCounter(
-            view_img=True,
-            reg_pts=region_points,
-            names=model.names,
-            draw_tracks=True,
-            line_thickness=2,
+            show=True,  # Display the output
+            region=region_points,  # Pass region points
+            model="yolo11n.pt",  # model="yolo11n-obb.pt" for object counting using YOLO11 OBB model.
+            # classes=[0, 2],  # If you want to count specific classes i.e person and car with COCO pretrained model.
+            # show_in=True,  # Display in counts
+            # show_out=True,  # Display out counts
+            # line_width=2,  # Adjust the line width for bounding boxes and text display
         )
 
+        # Process video
         while cap.isOpened():
             success, im0 = cap.read()
             if not success:
                 print("Video frame is empty or video processing has been successfully completed.")
                 break
-            tracks = model.track(im0, persist=True, show=False)
-
-            im0 = counter.start_counting(im0, tracks)
+            im0 = counter.count(im0)
             video_writer.write(im0)
 
         cap.release()
         video_writer.release()
         cv2.destroyAllWindows()
         ```
-
-    === "OBB Object Counting"
-
-        ```python
-        import cv2
-
-        from ultralytics import YOLO, solutions
-
-        model = YOLO("yolo11n-obb.pt")
-        cap = cv2.VideoCapture("path/to/video/file.mp4")
-        assert cap.isOpened(), "Error reading video file"
-        w, h, fps = (int(cap.get(x)) for x in (cv2.CAP_PROP_FRAME_WIDTH, cv2.CAP_PROP_FRAME_HEIGHT, cv2.CAP_PROP_FPS))
-
-        # Define region points
-        region_points = [(20, 400), (1080, 404), (1080, 360), (20, 360)]
-
-        # Video writer
-        video_writer = cv2.VideoWriter("object_counting_output.avi", cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
-
-        # Init Object Counter
-        counter = solutions.ObjectCounter(
-            view_img=True,
-            reg_pts=region_points,
-            names=model.names,
-            line_thickness=2,
-        )
-
-        while cap.isOpened():
-            success, im0 = cap.read()
-            if not success:
-                print("Video frame is empty or video processing has been successfully completed.")
-                break
-            tracks = model.track(im0, persist=True, show=False)
-            im0 = counter.start_counting(im0, tracks)
-            video_writer.write(im0)
-
-        cap.release()
-        video_writer.release()
-        cv2.destroyAllWindows()
-        ```
-
-    === "Count in Polygon"
-
-        ```python
-        import cv2
-
-        from ultralytics import YOLO, solutions
-
-        model = YOLO("yolo11n.pt")
-        cap = cv2.VideoCapture("path/to/video/file.mp4")
-        assert cap.isOpened(), "Error reading video file"
-        w, h, fps = (int(cap.get(x)) for x in (cv2.CAP_PROP_FRAME_WIDTH, cv2.CAP_PROP_FRAME_HEIGHT, cv2.CAP_PROP_FPS))
-
-        # Define region points as a polygon with 5 points
-        region_points = [(20, 400), (1080, 404), (1080, 360), (20, 360), (20, 400)]
-
-        # Video writer
-        video_writer = cv2.VideoWriter("object_counting_output.avi", cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
-
-        # Init Object Counter
-        counter = solutions.ObjectCounter(
-            view_img=True,
-            reg_pts=region_points,
-            names=model.names,
-            draw_tracks=True,
-            line_thickness=2,
-        )
-
-        while cap.isOpened():
-            success, im0 = cap.read()
-            if not success:
-                print("Video frame is empty or video processing has been successfully completed.")
-                break
-            tracks = model.track(im0, persist=True, show=False)
-            im0 = counter.start_counting(im0, tracks)
-            video_writer.write(im0)
-
-        cap.release()
-        video_writer.release()
-        cv2.destroyAllWindows()
-        ```
-
-    === "Count in Line"
-
-        ```python
-        import cv2
-
-        from ultralytics import YOLO, solutions
-
-        model = YOLO("yolo11n.pt")
-        cap = cv2.VideoCapture("path/to/video/file.mp4")
-        assert cap.isOpened(), "Error reading video file"
-        w, h, fps = (int(cap.get(x)) for x in (cv2.CAP_PROP_FRAME_WIDTH, cv2.CAP_PROP_FRAME_HEIGHT, cv2.CAP_PROP_FPS))
-
-        # Define line points
-        line_points = [(20, 400), (1080, 400)]
-
-        # Video writer
-        video_writer = cv2.VideoWriter("object_counting_output.avi", cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
-
-        # Init Object Counter
-        counter = solutions.ObjectCounter(
-            view_img=True,
-            reg_pts=line_points,
-            names=model.names,
-            draw_tracks=True,
-            line_thickness=2,
-        )
-
-        while cap.isOpened():
-            success, im0 = cap.read()
-            if not success:
-                print("Video frame is empty or video processing has been successfully completed.")
-                break
-            tracks = model.track(im0, persist=True, show=False)
-            im0 = counter.start_counting(im0, tracks)
-            video_writer.write(im0)
-
-        cap.release()
-        video_writer.release()
-        cv2.destroyAllWindows()
-        ```
-
-    === "Specific Classes"
-
-        ```python
-        import cv2
-
-        from ultralytics import YOLO, solutions
-
-        model = YOLO("yolo11n.pt")
-        cap = cv2.VideoCapture("path/to/video/file.mp4")
-        assert cap.isOpened(), "Error reading video file"
-        w, h, fps = (int(cap.get(x)) for x in (cv2.CAP_PROP_FRAME_WIDTH, cv2.CAP_PROP_FRAME_HEIGHT, cv2.CAP_PROP_FPS))
-
-        line_points = [(20, 400), (1080, 400)]  # line or region points
-        classes_to_count = [0, 2]  # person and car classes for count
-
-        # Video writer
-        video_writer = cv2.VideoWriter("object_counting_output.avi", cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
-
-        # Init Object Counter
-        counter = solutions.ObjectCounter(
-            view_img=True,
-            reg_pts=line_points,
-            names=model.names,
-            draw_tracks=True,
-            line_thickness=2,
-        )
-
-        while cap.isOpened():
-            success, im0 = cap.read()
-            if not success:
-                print("Video frame is empty or video processing has been successfully completed.")
-                break
-            tracks = model.track(im0, persist=True, show=False, classes=classes_to_count)
-            im0 = counter.start_counting(im0, tracks)
-            video_writer.write(im0)
-
-        cap.release()
-        video_writer.release()
-        cv2.destroyAllWindows()
-        ```
-
-???+ tip "Region is Movable"
-
-    You can move the region anywhere in the frame by clicking on its edges
 
 ### Argument `ObjectCounter`
 
 Here's a table with the `ObjectCounter` arguments:
 
-| Name              | Type   | Default                    | Description                                                            |
-| ----------------- | ------ | -------------------------- | ---------------------------------------------------------------------- |
-| `names`           | `dict` | `None`                     | Dictionary of classes names.                                           |
-| `reg_pts`         | `list` | `[(20, 400), (1260, 400)]` | List of points defining the counting region.                           |
-| `line_thickness`  | `int`  | `2`                        | Line thickness for bounding boxes.                                     |
-| `view_img`        | `bool` | `False`                    | Flag to control whether to display the video stream.                   |
-| `view_in_counts`  | `bool` | `True`                     | Flag to control whether to display the in counts on the video stream.  |
-| `view_out_counts` | `bool` | `True`                     | Flag to control whether to display the out counts on the video stream. |
-| `draw_tracks`     | `bool` | `False`                    | Flag to control whether to draw the object tracks.                     |
+| Name         | Type   | Default                    | Description                                                            |
+| ------------ | ------ | -------------------------- | ---------------------------------------------------------------------- |
+| `model`      | `str`  | `None`                     | Path to Ultralytics YOLO Model File                                    |
+| `region`     | `list` | `[(20, 400), (1260, 400)]` | List of points defining the counting region.                           |
+| `line_width` | `int`  | `2`                        | Line thickness for bounding boxes.                                     |
+| `show`       | `bool` | `False`                    | Flag to control whether to display the video stream.                   |
+| `show_in`    | `bool` | `True`                     | Flag to control whether to display the in counts on the video stream.  |
+| `show_out`   | `bool` | `True`                     | Flag to control whether to display the out counts on the video stream. |
 
 ### Arguments `model.track`
 
@@ -282,38 +129,34 @@ Here's a table with the `ObjectCounter` arguments:
 To count objects in a video using Ultralytics YOLO11, you can follow these steps:
 
 1. Import the necessary libraries (`cv2`, `ultralytics`).
-2. Load a pretrained YOLO11 model.
-3. Define the counting region (e.g., a polygon, line, etc.).
-4. Set up the video capture and initialize the object counter.
-5. Process each frame to track objects and count them within the defined region.
+2. Define the counting region (e.g., a polygon, line, etc.).
+3. Set up the video capture and initialize the object counter.
+4. Process each frame to track objects and count them within the defined region.
 
 Here's a simple example for counting in a region:
 
 ```python
 import cv2
 
-from ultralytics import YOLO, solutions
+from ultralytics import solutions
 
 
 def count_objects_in_region(video_path, output_video_path, model_path):
     """Count objects in a specific region within a video."""
-    model = YOLO(model_path)
     cap = cv2.VideoCapture(video_path)
     assert cap.isOpened(), "Error reading video file"
     w, h, fps = (int(cap.get(x)) for x in (cv2.CAP_PROP_FRAME_WIDTH, cv2.CAP_PROP_FRAME_HEIGHT, cv2.CAP_PROP_FPS))
-    region_points = [(20, 400), (1080, 404), (1080, 360), (20, 360)]
     video_writer = cv2.VideoWriter(output_video_path, cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
-    counter = solutions.ObjectCounter(
-        view_img=True, reg_pts=region_points, names=model.names, draw_tracks=True, line_thickness=2
-    )
+
+    region_points = [(20, 400), (1080, 404), (1080, 360), (20, 360)]
+    counter = solutions.ObjectCounter(show=True, region=region_points, model=model_path)
 
     while cap.isOpened():
         success, im0 = cap.read()
         if not success:
             print("Video frame is empty or video processing has been successfully completed.")
             break
-        tracks = model.track(im0, persist=True, show=False)
-        im0 = counter.start_counting(im0, tracks)
+        im0 = counter.count(im0)
         video_writer.write(im0)
 
     cap.release()
@@ -343,28 +186,25 @@ To count specific classes of objects using Ultralytics YOLO11, you need to speci
 ```python
 import cv2
 
-from ultralytics import YOLO, solutions
+from ultralytics import solutions
 
 
 def count_specific_classes(video_path, output_video_path, model_path, classes_to_count):
     """Count specific classes of objects in a video."""
-    model = YOLO(model_path)
     cap = cv2.VideoCapture(video_path)
     assert cap.isOpened(), "Error reading video file"
     w, h, fps = (int(cap.get(x)) for x in (cv2.CAP_PROP_FRAME_WIDTH, cv2.CAP_PROP_FRAME_HEIGHT, cv2.CAP_PROP_FPS))
-    line_points = [(20, 400), (1080, 400)]
     video_writer = cv2.VideoWriter(output_video_path, cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
-    counter = solutions.ObjectCounter(
-        view_img=True, reg_pts=line_points, names=model.names, draw_tracks=True, line_thickness=2
-    )
+
+    line_points = [(20, 400), (1080, 400)]
+    counter = solutions.ObjectCounter(show=True, region=line_points, model=model_path, classes=classes_to_count)
 
     while cap.isOpened():
         success, im0 = cap.read()
         if not success:
             print("Video frame is empty or video processing has been successfully completed.")
             break
-        tracks = model.track(im0, persist=True, show=False, classes=classes_to_count)
-        im0 = counter.start_counting(im0, tracks)
+        im0 = counter.count(im0)
         video_writer.write(im0)
 
     cap.release()

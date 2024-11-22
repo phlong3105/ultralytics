@@ -36,75 +36,53 @@ Monitoring workouts through pose estimation with [Ultralytics YOLO11](https://gi
 
 !!! example "Workouts Monitoring Example"
 
-    === "Workouts Monitoring"
+    === "CLI"
 
-        ```python
-        import cv2
+        ```bash
+        # Run a workout example
+        yolo solutions workout show=True
 
-        from ultralytics import YOLO, solutions
+        # Pass a source video
+        yolo solutions workout source="path/to/video/file.mp4"
 
-        model = YOLO("yolo11n-pose.pt")
-        cap = cv2.VideoCapture("path/to/video/file.mp4")
-        assert cap.isOpened(), "Error reading video file"
-        w, h, fps = (int(cap.get(x)) for x in (cv2.CAP_PROP_FRAME_WIDTH, cv2.CAP_PROP_FRAME_HEIGHT, cv2.CAP_PROP_FPS))
-
-        gym_object = solutions.AIGym(
-            line_thickness=2,
-            view_img=True,
-            pose_type="pushup",
-            kpts_to_check=[6, 8, 10],
-        )
-
-        while cap.isOpened():
-            success, im0 = cap.read()
-            if not success:
-                print("Video frame is empty or video processing has been successfully completed.")
-                break
-            results = model.track(im0, verbose=False)  # Tracking recommended
-            # results = model.predict(im0)  # Prediction also supported
-            im0 = gym_object.start_counting(im0, results)
-
-        cv2.destroyAllWindows()
+        # Use keypoints for pushups
+        yolo solutions workout kpts=[6, 8, 10]
         ```
 
-    === "Workouts Monitoring with Save Output"
+    === "Python"
 
         ```python
         import cv2
 
-        from ultralytics import YOLO, solutions
+        from ultralytics import solutions
 
-        model = YOLO("yolo11n-pose.pt")
         cap = cv2.VideoCapture("path/to/video/file.mp4")
         assert cap.isOpened(), "Error reading video file"
         w, h, fps = (int(cap.get(x)) for x in (cv2.CAP_PROP_FRAME_WIDTH, cv2.CAP_PROP_FRAME_HEIGHT, cv2.CAP_PROP_FPS))
 
+        # Video writer
         video_writer = cv2.VideoWriter("workouts.avi", cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
 
-        gym_object = solutions.AIGym(
-            line_thickness=2,
-            view_img=True,
-            pose_type="pushup",
-            kpts_to_check=[6, 8, 10],
+        # Init AIGym
+        gym = solutions.AIGym(
+            show=True,  # Display the frame
+            kpts=[6, 8, 10],  # keypoints index of person for monitoring specific exercise, by default it's for pushup
+            model="yolo11n-pose.pt",  # Path to the YOLO11 pose estimation model file
+            # line_width=2,  # Adjust the line width for bounding boxes and text display
         )
 
+        # Process video
         while cap.isOpened():
             success, im0 = cap.read()
             if not success:
                 print("Video frame is empty or video processing has been successfully completed.")
                 break
-            results = model.track(im0, verbose=False)  # Tracking recommended
-            # results = model.predict(im0)  # Prediction also supported
-            im0 = gym_object.start_counting(im0, results)
+            im0 = gym.monitor(im0)
             video_writer.write(im0)
 
         cv2.destroyAllWindows()
         video_writer.release()
         ```
-
-???+ tip "Support"
-
-    "pushup", "pullup" and "abworkout" supported
 
 ### KeyPoints Map
 
@@ -112,14 +90,14 @@ Monitoring workouts through pose estimation with [Ultralytics YOLO11](https://gi
 
 ### Arguments `AIGym`
 
-| Name              | Type    | Default  | Description                                                                            |
-| ----------------- | ------- | -------- | -------------------------------------------------------------------------------------- |
-| `kpts_to_check`   | `list`  | `None`   | List of three keypoints index, for counting specific workout, followed by keypoint Map |
-| `line_thickness`  | `int`   | `2`      | Thickness of the lines drawn.                                                          |
-| `view_img`        | `bool`  | `False`  | Flag to display the image.                                                             |
-| `pose_up_angle`   | `float` | `145.0`  | Angle threshold for the 'up' pose.                                                     |
-| `pose_down_angle` | `float` | `90.0`   | Angle threshold for the 'down' pose.                                                   |
-| `pose_type`       | `str`   | `pullup` | Type of pose to detect (`'pullup`', `pushup`, `abworkout`, `squat`).                   |
+| Name         | Type    | Default | Description                                                                            |
+| ------------ | ------- | ------- | -------------------------------------------------------------------------------------- |
+| `kpts`       | `list`  | `None`  | List of three keypoints index, for counting specific workout, followed by keypoint Map |
+| `line_width` | `int`   | `2`     | Thickness of the lines drawn.                                                          |
+| `show`       | `bool`  | `False` | Flag to display the image.                                                             |
+| `up_angle`   | `float` | `145.0` | Angle threshold for the 'up' pose.                                                     |
+| `down_angle` | `float` | `90.0`  | Angle threshold for the 'down' pose.                                                   |
+| `model`      | `str`   | `None`  | Path to Ultralytics YOLO Pose Model File                                               |
 
 ### Arguments `model.predict`
 
@@ -138,18 +116,16 @@ To monitor your workouts using Ultralytics YOLO11, you can utilize the pose esti
 ```python
 import cv2
 
-from ultralytics import YOLO, solutions
+from ultralytics import solutions
 
-model = YOLO("yolo11n-pose.pt")
 cap = cv2.VideoCapture("path/to/video/file.mp4")
 assert cap.isOpened(), "Error reading video file"
 w, h, fps = (int(cap.get(x)) for x in (cv2.CAP_PROP_FRAME_WIDTH, cv2.CAP_PROP_FRAME_HEIGHT, cv2.CAP_PROP_FPS))
 
-gym_object = solutions.AIGym(
-    line_thickness=2,
-    view_img=True,
-    pose_type="pushup",
-    kpts_to_check=[6, 8, 10],
+gym = solutions.AIGym(
+    line_width=2,
+    show=True,
+    kpts=[6, 8, 10],
 )
 
 while cap.isOpened():
@@ -157,8 +133,7 @@ while cap.isOpened():
     if not success:
         print("Video frame is empty or video processing has been successfully completed.")
         break
-    results = model.track(im0, verbose=False)
-    im0 = gym_object.start_counting(im0, results)
+    im0 = gym.monitor(im0)
 
 cv2.destroyAllWindows()
 ```
@@ -188,11 +163,10 @@ Yes, Ultralytics YOLO11 can be adapted for custom workout routines. The `AIGym` 
 ```python
 from ultralytics import solutions
 
-gym_object = solutions.AIGym(
-    line_thickness=2,
-    view_img=True,
-    pose_type="squat",
-    kpts_to_check=[6, 8, 10],
+gym = solutions.AIGym(
+    line_width=2,
+    show=True,
+    kpts=[6, 8, 10],
 )
 ```
 
@@ -205,20 +179,18 @@ To save the workout monitoring output, you can modify the code to include a vide
 ```python
 import cv2
 
-from ultralytics import YOLO, solutions
+from ultralytics import solutions
 
-model = YOLO("yolo11n-pose.pt")
 cap = cv2.VideoCapture("path/to/video/file.mp4")
 assert cap.isOpened(), "Error reading video file"
 w, h, fps = (int(cap.get(x)) for x in (cv2.CAP_PROP_FRAME_WIDTH, cv2.CAP_PROP_FRAME_HEIGHT, cv2.CAP_PROP_FPS))
 
 video_writer = cv2.VideoWriter("workouts.avi", cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
 
-gym_object = solutions.AIGym(
-    line_thickness=2,
-    view_img=True,
-    pose_type="pushup",
-    kpts_to_check=[6, 8, 10],
+gym = solutions.AIGym(
+    line_width=2,
+    show=True,
+    kpts=[6, 8, 10],
 )
 
 while cap.isOpened():
@@ -226,8 +198,7 @@ while cap.isOpened():
     if not success:
         print("Video frame is empty or video processing has been successfully completed.")
         break
-    results = model.track(im0, verbose=False)
-    im0 = gym_object.start_counting(im0, results)
+    im0 = gym.monitor(im0)
     video_writer.write(im0)
 
 cv2.destroyAllWindows()
