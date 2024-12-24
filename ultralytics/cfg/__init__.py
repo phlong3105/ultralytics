@@ -11,7 +11,6 @@ import cv2
 
 from ultralytics.utils import (
     ASSETS,
-    ASSETS_URL,
     DEFAULT_CFG,
     DEFAULT_CFG_DICT,
     DEFAULT_CFG_PATH,
@@ -42,6 +41,7 @@ SOLUTION_MAP = {
     "speed": ("SpeedEstimator", "estimate_speed"),
     "workout": ("AIGym", "monitor"),
     "analytics": ("Analytics", "process_data"),
+    "trackzone": ("TrackZone", "trackzone"),
     "help": None,
 }
 
@@ -75,27 +75,29 @@ ARGV = sys.argv or ["", ""]  # sometimes sys.argv = []
 SOLUTIONS_HELP_MSG = f"""
     Arguments received: {str(['yolo'] + ARGV[1:])}. Ultralytics 'yolo solutions' usage overview:
 
-        yolo SOLUTIONS SOLUTION ARGS
+        yolo solutions SOLUTION ARGS
 
-        Where SOLUTIONS (required) is a keyword
-              SOLUTION (optional) is one of {list(SOLUTION_MAP.keys())}
-              ARGS (optional) are any number of custom 'arg=value' pairs like 'show_in=True' that override defaults.
-                See all ARGS at https://docs.ultralytics.com/usage/cfg or with 'yolo cfg'
-
+        Where SOLUTION (optional) is one of {list(SOLUTION_MAP.keys())[:-1]}
+              ARGS (optional) are any number of custom 'arg=value' pairs like 'show_in=True' that override defaults 
+                  at https://docs.ultralytics.com/usage/cfg
+                
     1. Call object counting solution
-        yolo solutions count source="path/to/video/file.mp4" region=[(20, 400), (1080, 404), (1080, 360), (20, 360)]
+        yolo solutions count source="path/to/video/file.mp4" region=[(20, 400), (1080, 400), (1080, 360), (20, 360)]
 
     2. Call heatmaps solution
         yolo solutions heatmap colormap=cv2.COLORMAP_PARAULA model=yolo11n.pt
 
     3. Call queue management solution
-        yolo solutions queue region=[(20, 400), (1080, 404), (1080, 360), (20, 360)] model=yolo11n.pt
+        yolo solutions queue region=[(20, 400), (1080, 400), (1080, 360), (20, 360)] model=yolo11n.pt
 
     4. Call workouts monitoring solution for push-ups
         yolo solutions workout model=yolo11n-pose.pt kpts=[6, 8, 10]
 
     5. Generate analytical graphs
         yolo solutions analytics analytics_type="pie"
+    
+    6. Track objects within specific zones
+        yolo solutions trackzone source="path/to/video/file.mp4" region=[(150, 150), (1130, 150), (1130, 570), (150, 570)] 
     """
 CLI_HELP_MSG = f"""
     Arguments received: {str(['yolo'] + ARGV[1:])}. Ultralytics 'yolo' commands use the following syntax:
@@ -123,7 +125,7 @@ CLI_HELP_MSG = f"""
         yolo streamlit-predict
 
     6. Ultralytics solutions usage
-        yolo solutions count or in {list(SOLUTION_MAP.keys())} source="path/to/video/file.mp4"
+        yolo solutions count or in {list(SOLUTION_MAP.keys())[1:-1]} source="path/to/video/file.mp4"
 
     7. Run special commands:
         yolo help
@@ -160,7 +162,6 @@ CFG_FRACTION_KEYS = {  # fractional float arguments with 0.0<=values<=1.0
     "weight_decay",
     "warmup_momentum",
     "warmup_bias_lr",
-    "label_smoothing",
     "hsv_h",
     "hsv_s",
     "hsv_v",
@@ -436,6 +437,9 @@ def _handle_deprecation(custom):
         if key == "line_thickness":
             deprecation_warn(key, "line_width")
             custom["line_width"] = custom.pop("line_thickness")
+        if key == "label_smoothing":
+            deprecation_warn(key)
+            custom.pop("label_smoothing")
 
     return custom
 
@@ -738,9 +742,8 @@ def parse_key_value_pair(pair: str = "key=value"):
         pair (str): A string containing a key-value pair in the format "key=value".
 
     Returns:
-        (tuple): A tuple containing two elements:
-            - key (str): The parsed key.
-            - value (str): The parsed value.
+        key (str): The parsed key.
+        value (str): The parsed value.
 
     Raises:
         AssertionError: If the value is missing or empty.
