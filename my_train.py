@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 """This module implements the training scripts for YOLOv8."""
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ ultralytics.utils.DATASETS_DIR = mon.DATA_DIR
 
 
 # region Train
+
 def train(args: dict):
     model = YOLO(args["model"])
     _ = model.train(**args)
