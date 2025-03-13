@@ -117,7 +117,7 @@ def verify_image_label(args):
         # Verify labels
         if os.path.isfile(lb_file):
             nf = 1  # label found
-            with open(lb_file) as f:
+            with open(lb_file, encoding="utf-8") as f:
                 lb = [x.split() for x in f.read().strip().splitlines() if len(x)]
                 if any(len(x) > 6 for x in lb) and (not keypoint):  # is segment
                     classes = np.array([x[0] for x in lb], dtype=np.float32)
@@ -136,7 +136,7 @@ def verify_image_label(args):
 
                 # All labels
                 max_cls = lb[:, 0].max()  # max label count
-                assert max_cls <= num_cls, (
+                assert max_cls < num_cls, (
                     f"Label class {int(max_cls)} exceeds dataset class count {num_cls}. "
                     f"Possible class labels are 0-{num_cls - 1}"
                 )
@@ -184,7 +184,7 @@ def visualize_image_annotations(image_path, txt_path, label_map):
                         - height (float): The height of the bounding box (relative to image height).
         label_map (dict): A dictionary that maps class IDs (integers) to class labels (strings).
 
-    Example:
+    Examples:
         >>> label_map = {0: "cat", 1: "dog", 2: "bird"}  # It should include all annotated classes details
         >>> visualize_image_annotations("path/to/image.jpg", "path/to/annotations.txt", label_map)
     """
@@ -195,7 +195,7 @@ def visualize_image_annotations(image_path, txt_path, label_map):
     img = np.array(Image.open(image_path))
     img_height, img_width = img.shape[:2]
     annotations = []
-    with open(txt_path) as file:
+    with open(txt_path, encoding="utf-8") as file:
         for line in file:
             class_id, x_center, y_center, width, height = map(float, line.split())
             x = (x_center - width / 2) * img_width
@@ -478,21 +478,19 @@ class HUBDatasetStats:
         task (str): Dataset task. Options are 'detect', 'segment', 'pose', 'classify'. Default is 'detect'.
         autodownload (bool): Attempt to download dataset if not found locally. Default is False.
 
-    Example:
+    Note:
         Download *.zip files from https://github.com/ultralytics/hub/tree/main/example_datasets
-            i.e. https://github.com/ultralytics/hub/raw/main/example_datasets/coco8.zip for coco8.zip.
-        ```python
-        from ultralytics.data.utils import HUBDatasetStats
+        i.e. https://github.com/ultralytics/hub/raw/main/example_datasets/coco8.zip for coco8.zip.
 
-        stats = HUBDatasetStats("path/to/coco8.zip", task="detect")  # detect dataset
-        stats = HUBDatasetStats("path/to/coco8-seg.zip", task="segment")  # segment dataset
-        stats = HUBDatasetStats("path/to/coco8-pose.zip", task="pose")  # pose dataset
-        stats = HUBDatasetStats("path/to/dota8.zip", task="obb")  # OBB dataset
-        stats = HUBDatasetStats("path/to/imagenet10.zip", task="classify")  # classification dataset
-
-        stats.get_json(save=True)
-        stats.process_images()
-        ```
+    Examples:
+        >>> from ultralytics.data.utils import HUBDatasetStats
+        >>> stats = HUBDatasetStats("path/to/coco8.zip", task="detect")  # detect dataset
+        >>> stats = HUBDatasetStats("path/to/coco8-seg.zip", task="segment")  # segment dataset
+        >>> stats = HUBDatasetStats("path/to/coco8-pose.zip", task="pose")  # pose dataset
+        >>> stats = HUBDatasetStats("path/to/dota8.zip", task="obb")  # OBB dataset
+        >>> stats = HUBDatasetStats("path/to/imagenet10.zip", task="classify")  # classification dataset
+        >>> stats.get_json(save=True)
+        >>> stats.process_images()
     """
 
     def __init__(self, path="coco8.yaml", task="detect", autodownload=False):
@@ -605,7 +603,7 @@ class HUBDatasetStats:
             self.hub_dir.mkdir(parents=True, exist_ok=True)  # makes dataset-hub/
             stats_path = self.hub_dir / "stats.json"
             LOGGER.info(f"Saving {stats_path.resolve()}...")
-            with open(stats_path, "w") as f:
+            with open(stats_path, "w", encoding="utf-8") as f:
                 json.dump(self.stats, f)  # save stats.json
         if verbose:
             LOGGER.info(json.dumps(self.stats, indent=2, sort_keys=False))
@@ -639,14 +637,11 @@ def compress_one_image(f, f_new=None, max_dim=1920, quality=50):
         max_dim (int, optional): The maximum dimension (width or height) of the output image. Default is 1920 pixels.
         quality (int, optional): The image compression quality as a percentage. Default is 50%.
 
-    Example:
-        ```python
-        from pathlib import Path
-        from ultralytics.data.utils import compress_one_image
-
-        for f in Path("path/to/dataset").rglob("*.jpg"):
-            compress_one_image(f)
-        ```
+    Examples:
+        >>> from pathlib import Path
+        >>> from ultralytics.data.utils import compress_one_image
+        >>> for f in Path("path/to/dataset").rglob("*.jpg"):
+        >>>    compress_one_image(f)
     """
     try:  # use PIL
         im = Image.open(f)
@@ -673,12 +668,9 @@ def autosplit(path=DATASETS_DIR / "coco8/images", weights=(0.9, 0.1, 0.0), annot
         weights (list | tuple, optional): Train, validation, and test split fractions. Defaults to (0.9, 0.1, 0.0).
         annotated_only (bool, optional): If True, only images with an associated txt file are used. Defaults to False.
 
-    Example:
-        ```python
-        from ultralytics.data.utils import autosplit
-
-        autosplit()
-        ```
+    Examples:
+        >>> from ultralytics.data.utils import autosplit
+        >>> autosplit()
     """
     path = Path(path)  # images dir
     files = sorted(x for x in path.rglob("*.*") if x.suffix[1:].lower() in IMG_FORMATS)  # image files only
@@ -694,7 +686,7 @@ def autosplit(path=DATASETS_DIR / "coco8/images", weights=(0.9, 0.1, 0.0), annot
     LOGGER.info(f"Autosplitting images from {path}" + ", using *.txt labeled images only" * annotated_only)
     for i, img in TQDM(zip(indices, files), total=n):
         if not annotated_only or Path(img2label_paths([str(img)])[0]).exists():  # check label
-            with open(path.parent / txt[i], "a") as f:
+            with open(path.parent / txt[i], "a", encoding="utf-8") as f:
                 f.write(f"./{img.relative_to(path.parent).as_posix()}" + "\n")  # add image to txt file
 
 
@@ -714,8 +706,8 @@ def save_dataset_cache_file(prefix, path, x, version):
     if is_dir_writeable(path.parent):
         if path.exists():
             path.unlink()  # remove *.cache file if exists
-        np.save(str(path), x)  # save cache for next time
-        path.with_suffix(".cache.npy").rename(path)  # remove .npy suffix
+        with open(str(path), "wb") as file:  # context manager here fixes windows async np.save bug
+            np.save(file, x)
         LOGGER.info(f"{prefix}New cache created: {path}")
     else:
         LOGGER.warning(f"{prefix}WARNING ⚠️ Cache directory {path.parent} is not writeable, cache not saved.")
