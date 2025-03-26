@@ -173,49 +173,47 @@ class MaskDecoder(nn.Module):
 
 
 class SAM2MaskDecoder(nn.Module):
-    """
-    Transformer-based decoder for predicting instance segmentation masks from image and prompt embeddings.
+	"""
+	Transformer-based decoder for predicting instance segmentation masks from image and prompt embeddings.
 
-    This class extends the functionality of the MaskDecoder, incorporating additional features such as
-    high-resolution feature processing, dynamic multimask output, and object score prediction.
+	This class extends the functionality of the MaskDecoder, incorporating additional features such as
+	high-resolution feature processing, dynamic multimask output, and object score prediction.
 
-    Attributes:
-        transformer_dim (int): Channel dimension of the transformer.
-        transformer (nn.Module): Transformer used to predict masks.
-        num_multimask_outputs (int): Number of masks to predict when disambiguating masks.
-        iou_token (nn.Embedding): Embedding for IOU token.
-        num_mask_tokens (int): Total number of mask tokens.
-        mask_tokens (nn.Embedding): Embedding for mask tokens.
-        pred_obj_scores (bool): Whether to predict object scores.
-        obj_score_token (nn.Embedding): Embedding for object score token.
-        use_multimask_token_for_obj_ptr (bool): Whether to use multimask token for object pointer.
-        output_upscaling (nn.Sequential): Upscaling layers for output.
-        use_high_res_features (bool): Whether to use high-resolution features.
-        conv_s0 (nn.Conv2d): Convolutional layer for high-resolution features (s0).
-        conv_s1 (nn.Conv2d): Convolutional layer for high-resolution features (s1).
-        output_hypernetworks_mlps (nn.ModuleList): List of MLPs for output hypernetworks.
-        iou_prediction_head (MLP): MLP for IOU prediction.
-        pred_obj_score_head (nn.Linear | MLP): Linear layer or MLP for object score prediction.
-        dynamic_multimask_via_stability (bool): Whether to use dynamic multimask via stability.
-        dynamic_multimask_stability_delta (float): Delta value for dynamic multimask stability.
-        dynamic_multimask_stability_thresh (float): Threshold for dynamic multimask stability.
+	Attributes:
+		transformer_dim (int): Channel dimension of the transformer.
+		transformer (nn.Module): Transformer used to predict masks.
+		num_multimask_outputs (int): Number of masks to predict when disambiguating masks.
+		iou_token (nn.Embedding): Embedding for IOU token.
+		num_mask_tokens (int): Total number of mask tokens.
+		mask_tokens (nn.Embedding): Embedding for mask tokens.
+		pred_obj_scores (bool): Whether to predict object scores.
+		obj_score_token (nn.Embedding): Embedding for object score token.
+		use_multimask_token_for_obj_ptr (bool): Whether to use multimask token for object pointer.
+		output_upscaling (nn.Sequential): Upscaling layers for output.
+		use_high_res_features (bool): Whether to use high-resolution features.
+		conv_s0 (nn.Conv2d): Convolutional layer for high-resolution features (s0).
+		conv_s1 (nn.Conv2d): Convolutional layer for high-resolution features (s1).
+		output_hypernetworks_mlps (nn.ModuleList): List of MLPs for output hypernetworks.
+		iou_prediction_head (MLP): MLP for IOU prediction.
+		pred_obj_score_head (nn.Linear | MLP): Linear layer or MLP for object score prediction.
+		dynamic_multimask_via_stability (bool): Whether to use dynamic multimask via stability.
+		dynamic_multimask_stability_delta (float): Delta value for dynamic multimask stability.
+		dynamic_multimask_stability_thresh (float): Threshold for dynamic multimask stability.
 
-    Methods:
-        forward: Predicts masks given image and prompt embeddings.
-        predict_masks: Predicts instance segmentation masks from image and prompt embeddings.
-        _get_stability_scores: Computes mask stability scores based on IoU between thresholds.
-        _dynamic_multimask_via_stability: Dynamically selects the most stable mask output.
+	Methods:
+		forward: Predicts masks given image and prompt embeddings.
+		predict_masks: Predicts instance segmentation masks from image and prompt embeddings.
+		_get_stability_scores: Computes mask stability scores based on IoU between thresholds.
+		_dynamic_multimask_via_stability: Dynamically selects the most stable mask output.
 
-    Examples:
-        >>> image_embeddings = torch.rand(1, 256, 64, 64)
-        >>> image_pe = torch.rand(1, 256, 64, 64)
-        >>> sparse_prompt_embeddings = torch.rand(1, 2, 256)
-        >>> dense_prompt_embeddings = torch.rand(1, 256, 64, 64)
-        >>> decoder = SAM2MaskDecoder(256, transformer)
-        >>> masks, iou_pred, sam_tokens_out, obj_score_logits = decoder.forward(
-        ...     image_embeddings, image_pe, sparse_prompt_embeddings, dense_prompt_embeddings, True, False
-        ... )
-    """
+	Examples:
+		>>> image_embeddings = torch.rand(1, 256, 64, 64)
+		>>> image_pe = torch.rand(1, 256, 64, 64)
+		>>> sparse_prompt_embeddings = torch.rand(1, 2, 256)
+		>>> dense_prompt_embeddings = torch.rand(1, 256, 64, 64)
+		>>> decoder = SAM2MaskDecoder(256, transformer)
+		>>> masks, iou_pred, sam_tokens_out, obj_score_logits = decoder.forward(image_embeddings)
+	"""
 
     def __init__(
         self,
@@ -320,34 +318,32 @@ class SAM2MaskDecoder(nn.Module):
         repeat_image: bool,
         high_res_features: Optional[List[torch.Tensor]] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        """
-        Predict masks given image and prompt embeddings.
+	    """
+		Predict masks given image and prompt embeddings.
 
-        Args:
-            image_embeddings (torch.Tensor): Embeddings from the image encoder with shape (B, C, H, W).
-            image_pe (torch.Tensor): Positional encoding with the shape of image_embeddings (B, C, H, W).
-            sparse_prompt_embeddings (torch.Tensor): Embeddings of the points and boxes with shape (B, N, C).
-            dense_prompt_embeddings (torch.Tensor): Embeddings of the mask inputs with shape (B, C, H, W).
-            multimask_output (bool): Whether to return multiple masks or a single mask.
-            repeat_image (bool): Flag to repeat the image embeddings.
-            high_res_features (List[torch.Tensor] | None): Optional high-resolution features.
+		Args:
+			image_embeddings (torch.Tensor): Embeddings from the image encoder with shape (B, C, H, W).
+			image_pe (torch.Tensor): Positional encoding with the shape of image_embeddings (B, C, H, W).
+			sparse_prompt_embeddings (torch.Tensor): Embeddings of the points and boxes with shape (B, N, C).
+			dense_prompt_embeddings (torch.Tensor): Embeddings of the mask inputs with shape (B, C, H, W).
+			multimask_output (bool): Whether to return multiple masks or a single mask.
+			repeat_image (bool): Flag to repeat the image embeddings.
+			high_res_features (List[torch.Tensor] | None): Optional high-resolution features.
 
-        Returns:
-            masks (torch.Tensor): Batched predicted masks with shape (B, N, H, W).
-            iou_pred (torch.Tensor): Batched predictions of mask quality with shape (B, N).
-            sam_tokens_out (torch.Tensor): Batched SAM token for mask output with shape (B, N, C).
-            object_score_logits (torch.Tensor): Batched object score logits with shape (B, 1).
+		Returns:
+			masks (torch.Tensor): Batched predicted masks with shape (B, N, H, W).
+			iou_pred (torch.Tensor): Batched predictions of mask quality with shape (B, N).
+			sam_tokens_out (torch.Tensor): Batched SAM token for mask output with shape (B, N, C).
+			object_score_logits (torch.Tensor): Batched object score logits with shape (B, 1).
 
-        Examples:
-            >>> image_embeddings = torch.rand(1, 256, 64, 64)
-            >>> image_pe = torch.rand(1, 256, 64, 64)
-            >>> sparse_prompt_embeddings = torch.rand(1, 2, 256)
-            >>> dense_prompt_embeddings = torch.rand(1, 256, 64, 64)
-            >>> decoder = SAM2MaskDecoder(256, transformer)
-            >>> masks, iou_pred, sam_tokens_out, obj_score_logits = decoder.forward(
-            ...     image_embeddings, image_pe, sparse_prompt_embeddings, dense_prompt_embeddings, True, False
-            ... )
-        """
+		Examples:
+			>>> image_embeddings = torch.rand(1, 256, 64, 64)
+			>>> image_pe = torch.rand(1, 256, 64, 64)
+			>>> sparse_prompt_embeddings = torch.rand(1, 2, 256)
+			>>> dense_prompt_embeddings = torch.rand(1, 256, 64, 64)
+			>>> decoder = SAM2MaskDecoder(256, transformer)
+			>>> masks, iou_pred, sam_tokens_out, obj_score_logits = decoder.forward(image_embeddings)
+		"""
         masks, iou_pred, mask_tokens_out, object_score_logits = self.predict_masks(
             image_embeddings=image_embeddings,
             image_pe=image_pe,
