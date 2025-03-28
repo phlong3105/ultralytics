@@ -6,7 +6,7 @@ RT-DETR offers real-time performance and high accuracy, excelling in accelerated
 It features an efficient hybrid encoder and IoU-aware query selection for enhanced detection accuracy.
 
 References:
-    https://arxiv.org/pdf/2304.08069.pdf
+    - https://arxiv.org/pdf/2304.08069.pdf
 """
 
 from ultralytics.engine.model import Model

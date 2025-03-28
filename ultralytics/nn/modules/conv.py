@@ -337,7 +337,7 @@ class GhostConv(nn.Module):
         cv2 (Conv): Cheap operation convolution.
 
     References:
-        https://github.com/huawei-noah/ghostnet
+        - https://github.com/huawei-noah/ghostnet
     """
 
     def __init__(self, c1, c2, k=1, s=1, g=1, act=True):
@@ -385,7 +385,7 @@ class RepConv(nn.Module):
         default_act (nn.Module): Default activation function (SiLU).
 
     References:
-        https://github.com/DingXiaoH/RepVGG/blob/main/repvgg.py
+        - https://github.com/DingXiaoH/RepVGG/blob/main/repvgg.py
     """
 
     default_act = nn.SiLU()  # default activation
@@ -551,7 +551,7 @@ class ChannelAttention(nn.Module):
         act (nn.Sigmoid): Sigmoid activation for attention weights.
 
     References:
-        https://github.com/open-mmlab/mmdetection/tree/v3.0.0rc1/configs/rtmdet
+        - https://github.com/open-mmlab/mmdetection/tree/v3.0.0rc1/configs/rtmdet
     """
 
     def __init__(self, channels: int) -> None:

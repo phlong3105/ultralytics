@@ -62,7 +62,7 @@ def multi_scale_deformable_attn_pytorch(
         (torch.Tensor): The output tensor with shape (bs, num_queries, embed_dims).
 
     References:
-        https://github.com/IDEA-Research/detrex/blob/main/detrex/layers/multi_scale_deform_attn.py
+        - https://github.com/IDEA-Research/detrex/blob/main/detrex/layers/multi_scale_deform_attn.py
     """
     bs, _, num_heads, embed_dims = value.shape
     _, num_queries, num_heads, num_levels, num_points, _ = sampling_locations.shape

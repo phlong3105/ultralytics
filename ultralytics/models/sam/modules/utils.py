@@ -274,7 +274,7 @@ def add_decomposed_rel_pos(
         torch.Size([1, 64, 64])
 
     References:
-        https://github.com/facebookresearch/mvit/blob/main/mvit/models/attention.py
+        - https://github.com/facebookresearch/mvit/blob/main/mvit/models/attention.py
     """
     q_h, q_w = q_size
     k_h, k_w = k_size
