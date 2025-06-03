@@ -1,0 +1,18 @@
+# Fisheye8KvJG dataset:
+#   - trainvJG:  9,000 images (train_fixed + val_fixed + test_result)
+#   - val     :  2,712 images
+#   - test    :  1,000 images
+
+# Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
+path : data/fisheye8k                   # dataset root dir
+train: trainvJG/image                   # train images (relative to 'path')
+val  : val/image                        # val images (relative to 'path')
+test :                                  # test images (optional)
+
+# Classes
+names:
+  0: bus
+  1: bike
+  2: car
+  3: pedestrian
+  4: truck

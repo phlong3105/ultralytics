@@ -29,7 +29,7 @@ from .augment import (
 )
 from .base import BaseDataset
 from .converter import merge_multi_segment
-from .utils import (
+from .utils_new import (
     HELP_URL,
     check_file_speeds,
     get_hash,
