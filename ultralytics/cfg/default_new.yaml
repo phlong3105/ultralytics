@@ -77,7 +77,7 @@ line_width     :                                                                
 
 # Export settings ------------------------------------------------------------------------------------------------------
 format         : torchscript                                                    # (str) format to export to, choices at https://docs.ultralytics.com/modes/export/#export-formats
-keras          : False                                                          # (bool) use Kera=s
+keras          : False                                                          # (bool) use Keras
 optimize       : False                                                          # (bool) TorchScript: optimize for mobile
 int8           : False                                                          # (bool) CoreML/TF INT8 quantization
 dynamic        : False                                                          # (bool) ONNX/TF/TensorRT: dynamic axes

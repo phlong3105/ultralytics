@@ -1,46 +1,64 @@
-# Basic
+# ----- Global Settings & Hyperparameters -----
+# These settings can be overridden by the CLI.
 root        : ~                                                                 # Root directory of the current run.
-arch        : "yolov11"                                                         # Model architecture or family (e.g., resnet).
+task        : &task "detect"                                                    # Task name (e.g., detect, segment, classify).
+mode        : &mode "train"                                                     # Mode name (e.g., train, val, test, predict, export).
+arch        : &arch "yolov11"                                                   # Model architecture or family (e.g., resnet).
 model       : &model "yolov11n"                                                 # Model name (e.g., resnet50).
-data        : &data "widerface"                                                 # Dataset name (e.g., cifar10) or directory (e.g., data/cifar10).
+data        : &data "widerface"                                                # Dataset name (e.g., cifar10) or directory (e.g., data/cifar10).
 fullname    : &fullname "yolov11n_widerface"                                    # Full name of the current run (e.g., resnet50_cifar10_01). If not set, it will be this file's name.
 save_dir    : &save_dir ~                                                       # Saving directory. If not set, it will be `root/arch/model/data`.
-weights     : &weights "run/train/yolov11/yolov11n/yolov11n_widerface/last.pt"  # Path to the pretrained weights.
+weights     : &weights "zoo/extra/ultralytics/yolov11/yolov11n/widerface/yolov11n_widerface.pt"  # Path to the pretrained weights.
 device      : &device cuda:0,1,2,3                                              # Running device (i.e., cuda:0 | cuda:0,1,2,3 | cpu).
+seed        : &seed 0                                                           # Random seed.
+imgsz       : &imgsz 640                                                        # Image size for the model.
+# Train
+resume      : &resume "run/train/yolov11/yolov11n/yolov11n_widerface/last.pt"   # Resume from interrupted training.
+tuning      : &tuning "zoo/extra/ultralytics/yolov11/yolov11n/coco80/yolov11n_coco80.pt"  # Fine-tuning from a pretrained model.
+epochs      : &epochs 100                                                       # Training epochs.
+batch_size  : &batch_size 32                                                    # Batch size.
 torchrun    : False                                                             # If ``True``, use torch.distributed.run to run the training script.
 master_port : 7777                                                              # Master port for distributed training.
 master_addr : "localhost"                                                       # Master address for distributed training.
 local_rank  : -1                                                                # Local rank for distributed training.
-epochs      : &epochs 100                                                       # Training epochs.
-steps       : &steps ~                                                          # Training steps.
-seed        : &seed 0                                                           # Random seed.
-batch_size  : &batch_size 1                                                     # Batch size for prediction.
-imgsz       : &imgsz 640                                                        # Image size for the model.
+# Predict
 resize      : False                                                             # Resize the input image to `imgsz`.
 benchmark   : False                                                             # Benchmark the model.
+# Save & Visualize
 save_result : &save_result True                                                 # Save the result of the model.
 save_image  : &save_image True                                                  # Save the output image.
-save_debug  : &save_debug True                                                  # Save the debug information.
+save_debug  : &save_debug False                                                 # Save the debug information.
 use_fullname: True                                                              # Use the full name for the save_dir.
 keep_subdirs: False                                                             # Keep subdirectories in the save_dir.
 save_nearby : False                                                             # Save outputs nearby the source.
 exist_ok    : &exist_ok True                                                    # If ``False``, it will delete the save directory if it already exists.
 verbose     : &verbose True                                                     # Verbosity.
+# Export
+format        : "onnx"                                                          # Export format (e.g., onnx, engine, torchscript, coreml, tflite, openvino).
+opset         : 16                                                              # ONNX: opset version.
+simplify      : False                                                           # ONNX: Simplify model using `onnxslim`.
+use_fp16      : True                                                            # TRT: CoreML/TF FP16 quantization.
+use_int8      : False                                                           # TRT: CoreML/TF INT8 quantization.
+max_batch_size: 32                                                              # TRT: Max batch size for export.
+opt_batch_size: 16                                                              # TRT: Optimize batch size for export.
+min_batch_size: 1                                                               # TRT: Min batch size for export.
+# Custom config.yaml
+# cfg: ~                                                                          # For overriding settings defined in this file.
 
-# YOLO configs ---------------------------------------------------------------------------------------------------------
-options:
+# ----- Custom Settings -----
+cfg:
   # Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
   # Global configuration YAML with settings and hyperparameters for YOLO training, validation, prediction and export
   # For documentation see https://docs.ultralytics.com/usage/cfg/
-  task           : detect                                                       # (str) YOLO task, i.e. detect, segment, classify, pose, obb
-  mode           : train                                                        # (str) YOLO mode, i.e. train, val, predict, export, track, benchmark
+  task           : *task                                                        # (str) YOLO task, i.e. detect, segment, classify, pose, obb
+  mode           : *mode                                                        # (str) YOLO mode, i.e. train, val, predict, export, track, benchmark
   # Train settings -----------------------------------------------------------------------------------------------------
-  model          : "yolo11n.yaml"                                               # (str, optional) path to model file, i.e. yolo8n.pt, yolo8n.yaml
+  model          : "yolo11n.yaml"                                               # (str, optional) path to model file, i.e. yolov8n.pt, yolov8n.yaml
   data           : "widerface.yaml"                                             # (str, optional) path to data file, i.e. coco8.yaml
   epochs         : *epochs                                                      # (int) number of epochs to train for
   time           :                                                              # (float, optional) number of hours to train for, overrides epochs if supplied
   patience       : 100                                                          # (int) epochs to wait for no observable improvement for early stopping of training
-  batch          : 16                                                           # (int) number of images per batch (-1 for AutoBatch)
+  batch          : *batch_size                                                  # (int) number of images per batch (-1 for AutoBatch)
   imgsz          : *imgsz                                                       # (int | list) input images size as int for train and val modes, or list[h,w] for predict and export modes
   save           : True                                                         # (bool) save train checkpoints and predict results
   save_period    : -1                                                           # (int) Save checkpoint every x epochs (disabled if < 1)
@@ -50,7 +68,7 @@ options:
   project        :                                                              # (str, optional) project name
   name           : *fullname                                                    # (str, optional) experiment name, results saved to 'project/name' directory
   exist_ok       : *exist_ok                                                    # (bool) whether to overwrite existing experiment
-  pretrained     : "zoo/extra/ultralytics/yolov11/yolov11n/coco80/yolov11n_coco80.pt"  # (bool | str) whether to use a pretrained model (bool) or a model to load weights from (str)
+  pretrained     : True                                                         # (bool | str) whether to use a pretrained model (bool) or a model to load weights from (str)
   optimizer      : auto                                                         # (str) optimizer to use, choices=[SGD, Adam, Adamax, AdamW, NAdam, RAdam, RMSProp, auto]
   verbose        : *verbose                                                     # (bool) whether to print verbose output
   seed           : *seed                                                        # (int) random seed for reproducibility
@@ -74,7 +92,7 @@ options:
   val            : True                                                         # (bool) validate/test during training
   split          : val                                                          # (str) dataset split to use for validation, i.e. 'val', 'test' or 'train'
   save_json      : False                                                        # (bool) save results to JSON file
-  conf           : 0.5                                                          # (float, optional) object confidence threshold for detection (default 0.25 predict, 0.001 val)
+  conf           :                                                              # (float, optional) object confidence threshold for detection (default 0.25 predict, 0.001 val)
   iou            : 0.7                                                          # (float) intersection over union (IoU) threshold for NMS
   max_det        : 300                                                          # (int) maximum number of detections per image
   half           : False                                                        # (bool) use half precision (FP16)
@@ -102,7 +120,7 @@ options:
   line_width     :                                                              # (int, optional) line width of the bounding boxes. Scaled to image size if None.
   # Export settings ----------------------------------------------------------------------------------------------------
   format         : torchscript                                                  # (str) format to export to, choices at https://docs.ultralytics.com/modes/export/#export-formats
-  keras          : False                                                        # (bool) use Kera=s
+  keras          : False                                                        # (bool) use Keras
   optimize       : False                                                        # (bool) TorchScript: optimize for mobile
   int8           : False                                                        # (bool) CoreML/TF INT8 quantization
   dynamic        : False                                                        # (bool) ONNX/TF/TensorRT: dynamic axes

@@ -225,7 +225,8 @@ class BaseValidator:
         stats = self.get_stats()
         self.speed = dict(zip(self.speed.keys(), (x.t / len(self.dataloader.dataset) * 1e3 for x in dt)))
         self.finalize_metrics()
-        self.print_results()
+        # self.print_results()
+        self.print_results_per_class()
         self.run_callbacks("on_val_end")
         if self.training:
             model.float()
@@ -332,6 +333,10 @@ class BaseValidator:
 
     def print_results(self):
         """Print the results of the model's predictions."""
+        pass
+
+    def print_results_per_class(self):
+        """Print results per class."""
         pass
 
     def get_desc(self):
