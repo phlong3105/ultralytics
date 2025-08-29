@@ -217,9 +217,6 @@ class SegmentationValidator(DetectionValidator):
         Args:
             predn (Dict[str, torch.Tensor]): Predictions containing bboxes, masks, confidence scores, and classes.
             pbatch (Dict[str, Any]): Batch dictionary containing 'imgsz', 'ori_shape', 'ratio_pad', and 'im_file'.
-
-        Examples:
-             >>> result = {"image_id": 42, "category_id": 18, "bbox": [258.15, 41.29, 348.26, 243.78], "score": 0.236}
         """
         from faster_coco_eval.core.mask import encode  # noqa
 
@@ -229,18 +226,23 @@ class SegmentationValidator(DetectionValidator):
             rle["counts"] = rle["counts"].decode("utf-8")
             return rle
 
-        coco_masks = torch.as_tensor(predn["masks"], dtype=torch.uint8)
-        coco_masks = ops.scale_image(
-            coco_masks.permute(1, 2, 0).contiguous().cpu().numpy(),
-            pbatch["ori_shape"],
-            ratio_pad=pbatch["ratio_pad"],
-        )
-        pred_masks = np.transpose(coco_masks, (2, 0, 1))
+        pred_masks = np.transpose(predn["masks"], (2, 0, 1))
         with ThreadPool(NUM_THREADS) as pool:
             rles = pool.map(single_encode, pred_masks)
         super().pred_to_json(predn, pbatch)
         for i, r in enumerate(rles):
             self.jdict[-len(rles) + i]["segmentation"] = r  # segmentation
+
+    def scale_preds(self, predn: Dict[str, torch.Tensor], pbatch: Dict[str, Any]) -> Dict[str, torch.Tensor]:
+        """Scales predictions to the original image size."""
+        return {
+            **super().scale_preds(predn, pbatch),
+            "masks": ops.scale_image(
+                torch.as_tensor(predn["masks"], dtype=torch.uint8).permute(1, 2, 0).contiguous().cpu().numpy(),
+                pbatch["ori_shape"],
+                ratio_pad=pbatch["ratio_pad"],
+            ),
+        }
 
     def eval_json(self, stats: Dict[str, Any]) -> Dict[str, Any]:
         """Return COCO-style instance segmentation evaluation metrics."""

@@ -204,11 +204,13 @@ class DetectionValidator(BaseValidator):
                 continue
 
             # Save
+            if self.args.save_json or self.args.save_txt:
+                predn_scaled = self.scale_preds(predn, pbatch)
             if self.args.save_json:
-                self.pred_to_json(predn, pbatch)
+                self.pred_to_json(predn_scaled, pbatch)
             if self.args.save_txt:
                 self.save_one_txt(
-                    predn,
+                    predn_scaled,
                     self.args.save_conf,
                     pbatch["ori_shape"],
                     self.save_dir / "labels" / f"{Path(pbatch['im_file']).stem}.txt",
@@ -370,26 +372,43 @@ class DetectionValidator(BaseValidator):
             predn (Dict[str, torch.Tensor]): Predictions dictionary containing 'bboxes', 'conf', and 'cls' keys
                 with bounding box coordinates, confidence scores, and class predictions.
             pbatch (Dict[str, Any]): Batch dictionary containing 'imgsz', 'ori_shape', 'ratio_pad', and 'im_file'.
+
+        Examples:
+             >>> result = {
+             ...     "image_id": 42,
+             ...     "file_name": "42.jpg",
+             ...     "category_id": 18,
+             ...     "bbox": [258.15, 41.29, 348.26, 243.78],
+             ...     "score": 0.236,
+             ... }
         """
-        stem = Path(pbatch["im_file"]).stem
+        path = Path(pbatch["im_file"])
+        stem = path.stem
         image_id = int(stem) if stem.isnumeric() else stem
-        box = ops.scale_boxes(
-            pbatch["imgsz"],
-            predn["bboxes"].clone(),
-            pbatch["ori_shape"],
-            ratio_pad=pbatch["ratio_pad"],
-        )
-        box = ops.xyxy2xywh(box)  # xywh
+        box = ops.xyxy2xywh(predn["bboxes"])  # xywh
         box[:, :2] -= box[:, 2:] / 2  # xy center to top-left corner
         for b, s, c in zip(box.tolist(), predn["conf"].tolist(), predn["cls"].tolist()):
             self.jdict.append(
                 {
                     "image_id": image_id,
+                    "file_name": path.name,
                     "category_id": self.class_map[int(c)],
                     "bbox": [round(x, 3) for x in b],
                     "score": round(s, 5),
                 }
             )
+
+    def scale_preds(self, predn: Dict[str, torch.Tensor], pbatch: Dict[str, Any]) -> Dict[str, torch.Tensor]:
+        """Scales predictions to the original image size."""
+        return {
+            **predn,
+            "bboxes": ops.scale_boxes(
+                pbatch["imgsz"],
+                predn["bboxes"].clone(),
+                pbatch["ori_shape"],
+                ratio_pad=pbatch["ratio_pad"],
+            ),
+        }
 
     def eval_json(self, stats: Dict[str, Any]) -> Dict[str, Any]:
         """
